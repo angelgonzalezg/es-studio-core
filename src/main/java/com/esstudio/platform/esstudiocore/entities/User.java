@@ -3,6 +3,7 @@ package com.esstudio.platform.esstudiocore.entities;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.esstudio.platform.esstudiocore.validation.ExistsByEmail;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -30,6 +31,9 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(unique=true, nullable = false, updatable = false, length = 36)
+    private UUID uuid;
 
     @ExistsByEmail // Custom validation to check if email exists in the database
     @NotBlank
@@ -61,11 +65,6 @@ public class User {
 
     private boolean enabled;
 
-    @PrePersist
-    public void prePersist() {
-        enabled = true;
-    }
-
     private String firstName;
 
     private String lastName;
@@ -75,6 +74,12 @@ public class User {
     private LocalDateTime creationTime;
 
     private LocalDateTime updateTime;
+
+    @PrePersist
+    public void prePersist() {
+        enabled = true;
+        uuid = java.util.UUID.randomUUID();
+    }
 
     public User() {
         roles = new ArrayList<>();
@@ -86,6 +91,14 @@ public class User {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
     }
 
     public String getEmail() {
