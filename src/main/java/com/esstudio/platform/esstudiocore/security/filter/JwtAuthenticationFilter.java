@@ -4,9 +4,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -68,14 +69,14 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .getPrincipal();
         String uuid = userSpringSec.getUsername();
 
-        // Collection<? extends GrantedAuthority> roles = authResult.getAuthorities();
-        List<String> roles = authResult.getAuthorities()
+        Collection<String> roles = authResult.getAuthorities()
                 .stream()
-                .map(GrantedAuthority::getAuthority)
+                .map(authority -> authority.getAuthority())
                 .filter(role -> role.startsWith("ROLE_"))
                 .toList();
 
         Claims claims = Jwts.claims()
+                // .add("authorities", new ObjectMapper().writeValueAsString(roles))
                 .add("authorities", roles)
                 .build();
 
@@ -92,13 +93,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         Map<String, Object> body = new HashMap<>();
         body.put("token", token);
         body.put("type", "Bearer");
-        body.put("uuid", uuid);
         body.put("expires_in", 1800);
         body.put("message", String.format("Successfully authenticated user %s", uuid));
-        
+
         response.getWriter().write(new ObjectMapper().writeValueAsString(body));
         response.setContentType(CONTENT_TYPE);
-        response.setStatus(HttpServletResponse.SC_OK);
+        response.setStatus(HttpStatus.OK.value());
     }
 
     @Override
@@ -106,10 +106,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             AuthenticationException failed) throws IOException, ServletException {
 
         Map<String, Object> body = new HashMap<>();
-        body.put("message", "Authentication failed: " + failed.getMessage());
+        body.put("message", "Authentication failed!");
+        body.put("error", failed.getMessage());
 
         response.getWriter().write(new ObjectMapper().writeValueAsString(body));
         response.setContentType(CONTENT_TYPE);
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
     }
 }

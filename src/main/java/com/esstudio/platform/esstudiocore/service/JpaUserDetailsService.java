@@ -2,7 +2,6 @@ package com.esstudio.platform.esstudiocore.service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.esstudio.platform.esstudiocore.entities.User;
 import com.esstudio.platform.esstudiocore.repository.UserRepository;
-
-
-
 
 @Service
 public class JpaUserDetailsService implements UserDetailsService {
@@ -37,7 +33,8 @@ public class JpaUserDetailsService implements UserDetailsService {
 
         User user = userOptional.orElseThrow();
         
-        List<GrantedAuthority> authorities = user.getRoles().stream() // Convert Role entities to GrantedAuthority objects
+        // Convert Role entities to GrantedAuthority objects
+        List<GrantedAuthority> authorities = user.getRoles().stream()
             .map(role -> new SimpleGrantedAuthority(role.getName()))
             .collect(Collectors.toList());
 
