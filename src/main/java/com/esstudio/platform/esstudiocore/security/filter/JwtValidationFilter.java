@@ -28,10 +28,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import com.esstudio.platform.esstudiocore.security.TokenBlacklist;
+
 public class JwtValidationFilter extends BasicAuthenticationFilter {
 
-    public JwtValidationFilter(AuthenticationManager authenticationManager) {
+    private final TokenBlacklist tokenBlacklist;
+
+    public JwtValidationFilter(AuthenticationManager authenticationManager, TokenBlacklist tokenBlacklist) {
         super(authenticationManager);
+        this.tokenBlacklist = tokenBlacklist;
     }
 
     @Override
@@ -47,6 +52,16 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
 
         // Extract Jwt token from header
         String token = header.replace(PREFIX_TOKEN, "");
+
+        if (this.tokenBlacklist.isBlacklisted(token)) {
+            Map<String, String> body = new HashMap<>();
+            body.put("error", "Token has been blacklisted");
+            body.put("message", "Please login again");
+            response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType(CONTENT_TYPE);
+            return;
+        }
 
         try {
             Claims claims = Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token).getPayload();

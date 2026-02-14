@@ -4,15 +4,14 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.esstudio.platform.esstudiocore.entities.User;
@@ -34,6 +33,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
+        setFilterProcessesUrl("/login");
     }
 
     @Override
@@ -72,8 +72,10 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         Collection<String> roles = authResult.getAuthorities()
                 .stream()
                 .map(authority -> authority.getAuthority())
-                .filter(role -> role.startsWith("ROLE_"))
+                // .filter(role -> role.startsWith("ROLE_"))
                 .toList();
+        
+        System.out.println(roles);
 
         Claims claims = Jwts.claims()
                 // .add("authorities", new ObjectMapper().writeValueAsString(roles))
@@ -87,10 +89,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .issuedAt(new Date())
                 .signWith(SECRET_KEY)
                 .compact();
+        
+        System.out.println(claims.getIssuedAt());
 
         response.addHeader(HEADER_AUTHORIZATION, PREFIX_TOKEN + token);
 
-        Map<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new LinkedHashMap<>();
         body.put("token", token);
         body.put("type", "Bearer");
         body.put("expires_in", 1800);
