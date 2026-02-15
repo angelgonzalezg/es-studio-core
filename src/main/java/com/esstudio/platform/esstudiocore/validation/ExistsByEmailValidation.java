@@ -1,5 +1,4 @@
 package com.esstudio.platform.esstudiocore.validation;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +15,9 @@ public class ExistsByEmailValidation implements ConstraintValidator<ExistsByEmai
 
     @Override
     public boolean isValid(String email, ConstraintValidatorContext context) {
+        if (service == null) {
+            return true;
+        }
         return !service.existsByEmail(email);
     }
-
 }

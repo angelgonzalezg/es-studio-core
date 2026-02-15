@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.esstudio.platform.esstudiocore.validation.ExistsByEmail;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -18,11 +17,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "users")
@@ -35,13 +33,9 @@ public class User {
     @Column(unique=true, nullable = false, updatable = false, length = 36)
     private UUID uuid;
 
-    @ExistsByEmail // Custom validation to check if email exists in the database
-    @NotBlank
-    @Size(min = 10, max = 30)
-    @Column(unique = true)
+    @Column(unique = true, nullable = false, length = 150)
     private String email;
 
-    @NotBlank
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
@@ -77,8 +71,14 @@ public class User {
 
     @PrePersist
     public void prePersist() {
-        enabled = true;
         uuid = java.util.UUID.randomUUID();
+        creationTime = LocalDateTime.now();
+        enabled = true;
+    }
+
+    @PreUpdate
+    public void PreUpdate() {
+        updateTime = LocalDateTime.now();
     }
 
     public User() {

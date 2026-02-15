@@ -2,15 +2,17 @@ package com.esstudio.platform.esstudiocore.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.esstudio.platform.esstudiocore.dto.CreateUserDto;
+import com.esstudio.platform.esstudiocore.dto.UserDto;
 import com.esstudio.platform.esstudiocore.entities.Role;
 import com.esstudio.platform.esstudiocore.entities.User;
+import com.esstudio.platform.esstudiocore.mapper.UserMapper;
 import com.esstudio.platform.esstudiocore.repository.RoleRepository;
 import com.esstudio.platform.esstudiocore.repository.UserRepository;
 
@@ -26,36 +28,52 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private UserMapper userMapper;
+
+    // Get all Users
     @Override
     @Transactional(readOnly = true)
-    public List<User> findAll() {
-        return repository.findAll();
+    public List<UserDto> getUsers() {
+        return repository.findAll()
+                .stream()
+                .map(userMapper::toDto)
+                .toList();
     }
 
+    // Create User
     @Override
     @Transactional
-    public User save(User user) {
-        
-        Optional<Role> optionalRoleUser = roleRepository.findByName("ROLE_CLIENT");
+    public UserDto createUser(CreateUserDto dto) {
+
+        // DTO -> Entity
+        User user = userMapper.toEntity(dto);
+
+        // Default roles
         List<Role> roles = new ArrayList<>();
 
-        optionalRoleUser.ifPresent(roles::add);
+        roleRepository.findByName("ROLE_CLIENT")
+                .ifPresent(roles::add);
 
-        if(user.isAdmin()) {
-            Optional<Role> optionalRoleAdmin = roleRepository.findByName("ROLE_ADMIN");
-            optionalRoleAdmin.ifPresent(roles::add);
+        if (user.isAdmin()) {
+            roleRepository.findByName("ROLE_ADMIN")
+                    .ifPresent(roles::add);
         }
 
+        // Password
         user.setRoles(roles);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setPassword(
+            passwordEncoder.encode(dto.getPassword())
+        );
 
-        return repository.save(user);
+        user = repository.save(user);
+
+        return userMapper.toDto(user);
     }
 
+    // Validate if email exists in db 
     @Override
     public boolean existsByEmail(String email) {
         return repository.existsByEmail(email);
     }
-    
-
 }

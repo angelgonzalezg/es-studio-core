@@ -21,12 +21,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import com.esstudio.platform.esstudiocore.security.filter.JwtAuthenticationFilter;
 import com.esstudio.platform.esstudiocore.security.filter.JwtValidationFilter;
-
-import com.esstudio.platform.esstudiocore.security.TokenBlacklist;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true) // Enable method-level security with @PreAuthorize and @PostAuthorize
@@ -57,11 +52,11 @@ public class SpringSecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(
             (authorize) -> authorize
-            // .requestMatchers(HttpMethod.GET, "/users").permitAll()
-            .requestMatchers(HttpMethod.POST, "/users/register").permitAll()
+            .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
+            .requestMatchers(HttpMethod.POST, "/users/register").hasAnyRole("ADMIN", "DESIGNER")
+            .requestMatchers(HttpMethod.GET, "/users").hasAnyRole("ADMIN", "DESIGNER")
             // .requestMatchers(HttpMethod.GET, "/users", "/users/{id}").hasAnyRole("ADMIN", "DESIGNER")
             .anyRequest().authenticated())
-            .addFilter(new JwtAuthenticationFilter(authenticationManager()))
             .addFilter(jwtValidationFilter(authenticationManager()))
             .csrf(config -> config.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))

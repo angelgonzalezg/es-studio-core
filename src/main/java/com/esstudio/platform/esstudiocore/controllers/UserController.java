@@ -16,12 +16,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.esstudio.platform.esstudiocore.entities.User;
+import com.esstudio.platform.esstudiocore.dto.CreateUserDto;
+import com.esstudio.platform.esstudiocore.dto.UserDto;
 import com.esstudio.platform.esstudiocore.service.UserService;
 
 import jakarta.validation.Valid;
-import com.esstudio.platform.esstudiocore.security.TokenBlacklist;
-import jakarta.servlet.http.HttpServletRequest;
 // @CrossOrigin(origins = {"http://localhost:3000"}) // Allow requests from the frontend application
 // @CrossOrigin(originPatterns = {"http://localhost:3000", "http://localhost:5173"}) // Allow requests from frontend applications running on localhost:3000 and localhost:5173
 @CrossOrigin(origins = "*", originPatterns = "*") // Allow requests from any origin (for development purposes only, consider restricting this in production)
@@ -32,40 +31,22 @@ public class UserController {
     @Autowired
     private UserService service;
 
-    @Autowired
-    private TokenBlacklist tokenBlacklist;
-
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('DESIGNER')")
     @GetMapping
-    public List<User> list() {
-        return service.findAll();
+    public List<UserDto> list() {
+        return service.getUsers();
     }
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('DESIGNER')")
-    @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody User user, BindingResult result) {
-        if (result.hasFieldErrors()) { 
-            return validation(result);
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(user));
-    }
-
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody User user, BindingResult result) {
-        user.setAdmin(false);
-        return create(user, result);
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-            tokenBlacklist.blacklistToken(token);
+    public ResponseEntity<?> create(@Valid @RequestBody CreateUserDto user, BindingResult result) {
+        if (result.hasFieldErrors()) { 
+            return validate(result);
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createUser(user));
     }
 
-    private ResponseEntity<?> validation(BindingResult result){
+    private ResponseEntity<?> validate(BindingResult result){
         Map<String, String> errors = new HashMap<>();
 
         result.getFieldErrors().forEach(err -> {
