@@ -1,10 +1,11 @@
 package com.esstudio.platform.esstudiocore.service;
 
+import static com.esstudio.platform.esstudiocore.security.TokenJwtConfig.EXPIRATION_TIME;
 import static com.esstudio.platform.esstudiocore.security.TokenJwtConfig.SECRET_KEY;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.Date;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
         String token = Jwts.builder()
             .subject(uuid)
             .claims(claims)
-            .expiration(new Date(System.currentTimeMillis() + 1800000))
+            .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // 1 hour expiration
             .issuedAt(new Date())
             .signWith(SECRET_KEY)
             .compact();
@@ -67,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
 
         tokenData.put("token", token);
         tokenData.put("type", "Bearer");
-        tokenData.put("expires_in", 1800);
+        tokenData.put("expires_in", EXPIRATION_TIME);
 
         AuthDto<Object> response = new AuthDto<>();
 

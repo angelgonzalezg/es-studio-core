@@ -13,7 +13,7 @@ import jakarta.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ExistsByEmail {
 
-	String message() default "already exists in system! Register with a different email.";
+	String message() default "is already in use! Register with a different email.";
 
 	Class<?>[] groups() default {};
 

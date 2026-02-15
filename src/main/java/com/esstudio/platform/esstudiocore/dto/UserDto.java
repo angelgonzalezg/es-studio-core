@@ -24,7 +24,7 @@ public class UserDto {
 
     private LocalDateTime creationTime;
 
-    private LocalDateTime updateTime;
+    private ClientProfileDto clientProfile;
 
     public Long getId() {
         return id;
@@ -98,11 +98,11 @@ public class UserDto {
         this.creationTime = creationTime;
     }
 
-    public LocalDateTime getUpdateTime() {
-        return updateTime;
+    public ClientProfileDto getClientProfile() {
+        return clientProfile;
     }
 
-    public void setUpdateTime(LocalDateTime updateTime) {
-        this.updateTime = updateTime;
+    public void setClientProfile(ClientProfileDto clientProfile) {
+        this.clientProfile = clientProfile;
     }
 }

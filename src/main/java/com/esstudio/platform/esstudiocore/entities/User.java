@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -39,6 +41,22 @@ public class User {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
+    private boolean enabled;
+
+    private String firstName;
+
+    private String lastName;
+
+    private String phone;
+
+    private LocalDateTime creationTime;
+
+    private LocalDateTime updateTime;
+
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private boolean admin;
+
     // Bidirectional relationship with Role, we ignore roles in JSON to prevent infinite recursion.
     // Hibernate lazy loading can cause issues during JSON serialization, so we also ignore handler and hibernateLazyInitializer.
     @JsonIgnoreProperties({"users", "handler", "hibernateLazyInitializer"})
@@ -53,26 +71,16 @@ public class User {
     )
     private List<Role> roles;
 
-    @Transient
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private boolean admin;
+    // Bidirectional relationship with client profiles
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = true)
+    private ClientProfile clientProfile;
 
-    private boolean enabled;
-
-    private String firstName;
-
-    private String lastName;
-
-    private String phone;
-
-    private LocalDateTime creationTime;
-
-    private LocalDateTime updateTime;
 
     @PrePersist
     public void prePersist() {
         uuid = java.util.UUID.randomUUID();
         creationTime = LocalDateTime.now();
+        updateTime = LocalDateTime.now();
         enabled = true;
     }
 
@@ -210,5 +218,13 @@ public class User {
         } else if (!email.equals(other.email))
             return false;
         return true;
+    }
+
+    public ClientProfile getClientProfile() {
+        return clientProfile;
+    }
+
+    public void setClientProfile(ClientProfile clientProfile) {
+        this.clientProfile = clientProfile;
     }
 }

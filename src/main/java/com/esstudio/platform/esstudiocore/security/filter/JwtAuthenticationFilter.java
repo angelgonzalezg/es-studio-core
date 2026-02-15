@@ -74,8 +74,6 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .map(authority -> authority.getAuthority())
                 // .filter(role -> role.startsWith("ROLE_"))
                 .toList();
-        
-        System.out.println(roles);
 
         Claims claims = Jwts.claims()
                 // .add("authorities", new ObjectMapper().writeValueAsString(roles))
@@ -89,8 +87,6 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .issuedAt(new Date())
                 .signWith(SECRET_KEY)
                 .compact();
-        
-        System.out.println(claims.getIssuedAt());
 
         response.addHeader(HEADER_AUTHORIZATION, PREFIX_TOKEN + token);
 

@@ -29,6 +29,9 @@ public class CreateUserDto {
 
     private boolean isAdmin;
 
+    // Optional Client profile information for users
+    private CreateClientProfileDto clientProfile;
+
     public String getEmail() {
         return email;
     }
@@ -75,5 +78,13 @@ public class CreateUserDto {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+    
+    public CreateClientProfileDto getClientProfile() {
+        return clientProfile;
+    }
+
+    public void setClientProfile(CreateClientProfileDto clientProfile) {
+        this.clientProfile = clientProfile;
     }
 }
