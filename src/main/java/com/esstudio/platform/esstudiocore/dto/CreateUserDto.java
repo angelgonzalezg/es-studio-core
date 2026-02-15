@@ -2,7 +2,6 @@ package com.esstudio.platform.esstudiocore.dto;
 
 import com.esstudio.platform.esstudiocore.validation.ExistsByEmail;
 
-import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

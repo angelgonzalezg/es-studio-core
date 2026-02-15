@@ -2,6 +2,7 @@ package com.esstudio.platform.esstudiocore.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,6 +40,11 @@ public class UserServiceImpl implements UserService {
                 .stream()
                 .map(userMapper::toDto)
                 .toList();
+    }
+
+    public Optional<UserDto> getUserById(long id) {
+        return repository.findById(id)
+                .map(userMapper::toDto);
     }
 
     // Create User

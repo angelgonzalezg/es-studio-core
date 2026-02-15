@@ -14,31 +14,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.esstudio.platform.esstudiocore.entities.User;
+import com.esstudio.platform.esstudiocore.service.AuthService;
 import com.esstudio.platform.esstudiocore.service.UserService;
-import com.esstudio.platform.esstudiocore.security.TokenBlacklist;
 
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.stream.Collectors;
 
-import com.esstudio.platform.esstudiocore.dto.AuthResponseDto;
+import com.esstudio.platform.esstudiocore.dto.AuthDto;
 import com.esstudio.platform.esstudiocore.dto.CreateUserDto;
-
-import static com.esstudio.platform.esstudiocore.security.TokenJwtConfig.*;
 
 // @CrossOrigin(origins = {"http://localhost:3000"}) // Allow requests from the frontend application
 // @CrossOrigin(originPatterns = {"http://localhost:3000", "http://localhost:5173"}) // Allow requests from frontend applications running on localhost:3000 and localhost:5173
@@ -48,13 +33,10 @@ import static com.esstudio.platform.esstudiocore.security.TokenJwtConfig.*;
 public class AuthController {
 
     @Autowired
-    private UserService service;
+    private UserService userService;
 
     @Autowired
-    private TokenBlacklist tokenBlacklist;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody CreateUserDto dto, BindingResult result) {
@@ -63,56 +45,29 @@ public class AuthController {
         }
 
         dto.setAdmin(false);
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.getUsers());
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(dto));
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User loginRequest) {
+
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+            return ResponseEntity.ok(
+                authService.login(loginRequest)
             );
 
-            UserDetails userSpringSec = (UserDetails) authentication.getPrincipal();
-            String uuid = userSpringSec.getUsername();
+        } catch (Exception e) {
 
-            Collection<String> roles = authentication.getAuthorities()
-                .stream()
-                .map(authority -> authority.getAuthority())
-                .collect(Collectors.toList());
+            AuthDto<Object> response = new AuthDto<>();
 
-            Claims claims = Jwts.claims()
-                .add("authorities", roles)
-                .build();
+            response.setMessage("Authentication failed!");
+            response.setData(null);
+            response.setTimestamp(LocalDateTime.now());
+            response.setError(e.getMessage());
 
-            String token = Jwts.builder()
-                .subject(uuid)
-                .claims(claims)
-                .expiration(new Date(System.currentTimeMillis() + 1800000)) // 30 min
-                .issuedAt(new Date())
-                .signWith(SECRET_KEY)
-                .compact();
-
-            Map<String, Object> tokenData = new LinkedHashMap<>();
-            tokenData.put("token", token);
-            tokenData.put("type", "Bearer");
-            tokenData.put("expires_in", 1800);
-
-            AuthResponseDto<Object> responseDTO = new AuthResponseDto<>();
-            responseDTO.setMessage(String.format("Successfully authenticated user %s", uuid));
-            responseDTO.setData(tokenData);
-            responseDTO.setTimestamp(LocalDateTime.now());
-            responseDTO.setError(null);
-
-            return ResponseEntity.ok(responseDTO);
-        } catch (AuthenticationException e) {
-            AuthResponseDto<Object> responseDTO = new AuthResponseDto<>();
-            responseDTO.setMessage("Authentication failed!");
-            responseDTO.setData(null);
-            responseDTO.setTimestamp(LocalDateTime.now());
-            responseDTO.setError(e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseDTO);
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(response);
         }
     }
 
@@ -121,7 +76,7 @@ public class AuthController {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
-            tokenBlacklist.blacklistToken(token);
+            authService.logout(token);
         }
         return ResponseEntity.ok().build();
     }

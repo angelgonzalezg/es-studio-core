@@ -2,7 +2,7 @@ package com.esstudio.platform.esstudiocore.dto;
 
 import java.time.LocalDateTime;
 
-public class AuthResponseDto<T> {
+public class AuthDto<T> {
     private String message;
     private T data;
     private LocalDateTime timestamp;
