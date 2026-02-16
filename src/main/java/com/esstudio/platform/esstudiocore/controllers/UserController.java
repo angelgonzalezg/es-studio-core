@@ -52,7 +52,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('DESIGNER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
     public ResponseEntity<?> create(@Valid @RequestBody CreateUserDto user, BindingResult result) {
         if (result.hasFieldErrors()) {
@@ -61,7 +61,6 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createUser(user));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('DESIGNER')")
     @PutMapping("/{id}/me")
     public void update(@PathVariable("id") long id, @RequestBody UpdateUserDto user) {
         service.updateUser(id, user);
