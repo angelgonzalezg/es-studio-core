@@ -1,7 +1,6 @@
 package com.esstudio.platform.esstudiocore.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,22 +11,28 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.esstudio.platform.esstudiocore.dto.CreateUserDto;
 import com.esstudio.platform.esstudiocore.dto.UpdateUserDto;
+import com.esstudio.platform.esstudiocore.dto.UserDetailsDto;
 import com.esstudio.platform.esstudiocore.dto.UserDto;
 import com.esstudio.platform.esstudiocore.entities.ClientProfile;
-import com.esstudio.platform.esstudiocore.entities.Role;
 import com.esstudio.platform.esstudiocore.entities.User;
 import com.esstudio.platform.esstudiocore.mapper.UserMapper;
-import com.esstudio.platform.esstudiocore.repository.RoleRepository;
 import com.esstudio.platform.esstudiocore.repository.UserRepository;
+import com.esstudio.platform.esstudiocore.security.enums.RoleType;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     @Autowired
-    private UserRepository repository;
+    private UserRepository userRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
+    private RoleService roleService;
+
+    @Autowired
+    private ClientProfileService clientProfileService;
+
+    @Autowired
+    private DesignerProfileService designerProfileService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -35,11 +40,12 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
 
+
     // Get all Users
     @Override
     @Transactional(readOnly = true)
     public List<UserDto> getUsers() {
-        return repository.findAll()
+        return userRepository.findAll()
                 .stream()
                 .map(userMapper::toDto)
                 .toList();
@@ -48,7 +54,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Optional<UserDto> getUserById(long id) {
-        return repository.findById(id)
+        return userRepository.findById(id)
                 .map(userMapper::toDto);
     }
 
@@ -60,67 +66,77 @@ public class UserServiceImpl implements UserService {
         // DTO -> Entity
         User user = userMapper.toEntity(dto);
 
-        // Default roles
-        List<Role> roles = new ArrayList<>();
-
-        roleRepository.findByName("ROLE_CLIENT")
-                .ifPresent(roles::add);
-
-        if (user.isAdmin()) {
-            roleRepository.findByName("ROLE_ADMIN")
-                    .ifPresent(roles::add);
-        }
-
-        // Set roles to user
-        user.setRoles(roles);
-
         // Password
         user.setPassword(
-            passwordEncoder.encode(dto.getPassword())
-        );
+                passwordEncoder.encode(dto.getPassword()));
 
+        // Save user first to generate ID
+        User savedUser = userRepository.save(user);
+
+        // Always assign default ROLE_USER for new users
+        roleService.assignRoletoUser(savedUser, RoleType.ROLE_USER);
+
+        // If client profile data is provided, create and associate client profile
         if (dto.getClientProfile() != null) {
-            // If client profile data is provided, create a client profile and associate it with the user
             ClientProfile clientProfile = new ClientProfile();
             clientProfile.setCompanyName(dto.getClientProfile().getCompanyName());
             clientProfile.setTaxId(dto.getClientProfile().getTaxId());
             clientProfile.setBillingAddress(dto.getClientProfile().getBillingAddress());
-            clientProfile.setUser(user); // Set the relationship
-            // Save the client profile (cascading will save the user as well)
-            user.setClientProfile(clientProfile);
+            clientProfile.setUser(savedUser);
+            savedUser.setClientProfile(clientProfile);
+            userRepository.save(savedUser); // Save to persist relationship
+        } else {
+            userRepository.save(savedUser); // Save to persist roles
         }
 
-        user = repository.save(user);
+        return userMapper.toDto(savedUser);
+    }
 
-        return userMapper.toDto(user);
+    @Override
+    @Transactional(readOnly = true)
+    public UserDetailsDto getUserDetails(Long id) {
+
+        User user = userRepository.findUserWithProfilesById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return userMapper.toDetails(user);
     }
 
     @Override
     @Transactional
-    public UserDto updateUserProfile(Long id, UpdateUserDto dto) {
-        User user = repository.findById(id)
+    public UserDetailsDto updateUser(Long id, UpdateUserDto dto) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
-        ClientProfile clientProfile = user.getClientProfile();
+        userMapper.updateEntity(user, dto);
 
-        if (clientProfile == null && dto.getClientProfile() != null) {
-            clientProfile = new ClientProfile();
-            clientProfile.setUser(user);
+        // Update roles if provided
+        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
+            for (String roleName : dto.getRoles()) {
+                RoleType roleType = RoleType.valueOf(roleName);
+                roleService.assignRoletoUser(user, roleType);
+            }
         }
 
-        // Delegate the update logic to the mapper
-        userMapper.updateEntity(user, dto, clientProfile, dto.getClientProfile());
+        // Client profile update
+        if (roleService.hasRole(user, RoleType.ROLE_USER) && dto.getClientProfile() != null) {
+            clientProfileService.updateProfile(user, dto.getClientProfile());
+        }
+
+        // Designer profile update
+        if (roleService.hasRole(user, RoleType.ROLE_DESIGNER) && dto.getDesignerProfile() != null) {
+            designerProfileService.updateProfile(user, dto.getDesignerProfile());
+        }
 
         user.setUpdateTime(LocalDateTime.now());
-
-        user = repository.save(user);
-        return userMapper.toDto(user);  
-
+        User savedUser = userRepository.save(user);
+        
+        return userMapper.toDetails(savedUser);
     }
 
-    // Validate if email exists in db 
+    // Validate if email exists in db
     @Override
     public boolean existsByEmail(String email) {
-        return repository.existsByEmail(email);
+        return userRepository.existsUserByEmail(email);
     }
 }

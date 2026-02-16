@@ -2,17 +2,23 @@ package com.esstudio.platform.esstudiocore.mapper;
 
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.esstudio.platform.esstudiocore.dto.ClientProfileDto;
 import com.esstudio.platform.esstudiocore.dto.CreateUserDto;
 import com.esstudio.platform.esstudiocore.dto.UpdateUserDto;
+import com.esstudio.platform.esstudiocore.dto.UserDetailsDto;
 import com.esstudio.platform.esstudiocore.dto.UserDto;
-import com.esstudio.platform.esstudiocore.entities.ClientProfile;
 import com.esstudio.platform.esstudiocore.entities.User;
 
 @Component
 public class UserMapper {
+
+    @Autowired
+    private ClientProfileMapper clientMapper;
+
+    @Autowired
+    private DesignerProfileMapper designerMapper;
 
     // CreateUserDto -> User (entity)
     public User toEntity(CreateUserDto dto) {
@@ -45,12 +51,34 @@ public class UserMapper {
         dto.setEnabled(user.isEnabled());
         dto.setCreationTime(user.getCreationTime());
 
-        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
-            dto.setRoles(
-                    user.getRoles()
-                            .stream()
-                            .map(role -> role.getName())
-                            .collect(Collectors.toList()));
+        dto.setRoles(
+                user.getRoles()
+                        .stream()
+                        .map(role -> role.getName())
+                        .collect(Collectors.toSet()));
+        return dto;
+    }
+
+    // User (entity) -> UserDetailsDto (client response)
+    public UserDetailsDto toDetailsDto(User user) {
+
+        UserDetailsDto dto = new UserDetailsDto();
+
+        dto.setId(user.getId());
+        dto.setEmail(user.getEmail());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+
+        dto.setRoles(
+                user.getRoles()
+                        .stream()
+                        .map(role -> role.getName())
+                        .collect(Collectors.toSet()));
+
+        if (user.getClientProfile() != null) {
+            dto.setClientProfile(
+                    clientMapper.toDto(
+                            user.getClientProfile()));
         }
 
         return dto;
@@ -59,9 +87,7 @@ public class UserMapper {
     // UpdateUserDto -> User
     public void updateEntity(
             User user,
-            UpdateUserDto dto,
-            ClientProfile clientProfile,
-            ClientProfileDto clientProfileDto) {
+            UpdateUserDto dto) {
 
         if (dto == null || user == null)
             return;
@@ -78,23 +104,36 @@ public class UserMapper {
         if (dto.getPhone() != null) {
             user.setPhone(dto.getPhone());
         }
+    }
 
-        // Client profile fields
-        if (clientProfileDto != null && clientProfile != null) {
+    public UserDetailsDto toDetails(User user) {
 
-            if (clientProfileDto.getCompanyName() != null) {
-                clientProfile.setCompanyName(clientProfileDto.getCompanyName());
-            }
+        if (user == null)
+            return null;
 
-            if (clientProfileDto.getTaxId() != null) {
-                clientProfile.setTaxId(clientProfileDto.getTaxId());
-            }
+        UserDetailsDto dto = new UserDetailsDto();
 
-            if (clientProfileDto.getBillingAddress() != null) {
-                clientProfile.setBillingAddress(clientProfileDto.getBillingAddress());
-            }
+        dto.setId(user.getId());
+        dto.setEmail(user.getEmail());
 
-            user.setClientProfile(clientProfile);
+        dto.setRoles(
+                user.getRoles()
+                        .stream()
+                        .map(role -> role.getName())
+                        .collect(Collectors.toSet()));
+
+        if (user.getClientProfile() != null) {
+            dto.setClientProfile(
+                    clientMapper.toDto(
+                            user.getClientProfile()));
         }
+
+        if (user.getDesignerProfile() != null) {
+            dto.setDesignerProfile(
+                    designerMapper.toDto(
+                            user.getDesignerProfile()));
+        }
+
+        return dto;
     }
 }

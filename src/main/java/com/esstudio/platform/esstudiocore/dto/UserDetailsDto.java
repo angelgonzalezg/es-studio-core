@@ -1,21 +1,32 @@
 package com.esstudio.platform.esstudiocore.dto;
 
-import java.time.LocalDateTime;
-
 import java.util.Set;
 
-public class UpdateUserDto {
-
-    // user fields
+public class UserDetailsDto {
+    private Long id;
+    private String email;
     private String firstName;
     private String lastName;
-    private String phone;
-    private LocalDateTime updateTime;
-
     private Set<String> roles;
 
     private ClientProfileDto clientProfile;
     private DesignerProfileDto designerProfile;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     public String getFirstName() {
         return firstName;
@@ -31,22 +42,6 @@ public class UpdateUserDto {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public LocalDateTime getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(LocalDateTime updateTime) {
-        this.updateTime = updateTime;
     }
 
     public Set<String> getRoles() {
@@ -72,5 +67,4 @@ public class UpdateUserDto {
     public void setDesignerProfile(DesignerProfileDto designerProfile) {
         this.designerProfile = designerProfile;
     }
-    
 }

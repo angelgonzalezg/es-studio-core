@@ -3,7 +3,6 @@ package com.esstudio.platform.esstudiocore.controllers;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.esstudio.platform.esstudiocore.dto.CreateUserDto;
 import com.esstudio.platform.esstudiocore.dto.UpdateUserDto;
+import com.esstudio.platform.esstudiocore.dto.UserDetailsDto;
 import com.esstudio.platform.esstudiocore.dto.UserDto;
 import com.esstudio.platform.esstudiocore.service.UserService;
 
@@ -42,11 +42,14 @@ public class UserController {
     public List<UserDto> list() {
         return service.getUsers();
     }
-
+    
     @PreAuthorize("hasRole('ADMIN') or hasRole('DESIGNER')")
     @GetMapping("/{id}")
-    public Optional<UserDto> getById(@PathVariable("id") long id) {
-        return service.getUserById(id);
+    public ResponseEntity<UserDetailsDto> getUserById(@PathVariable("id") Long id) {
+
+        UserDetailsDto user = service.getUserDetails(id);
+
+        return ResponseEntity.ok(user);
     }
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('DESIGNER')")
@@ -58,9 +61,10 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createUser(user));
     }
 
-    @PutMapping("/{id}/profile")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DESIGNER')")
+    @PutMapping("/{id}/me")
     public void update(@PathVariable("id") long id, @RequestBody UpdateUserDto user) {
-        service.updateUserProfile(id, user);
+        service.updateUser(id, user);
     }
 
     private ResponseEntity<?> validate(BindingResult result) {

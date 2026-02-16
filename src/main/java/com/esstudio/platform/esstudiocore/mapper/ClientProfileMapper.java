@@ -2,32 +2,19 @@ package com.esstudio.platform.esstudiocore.mapper;
 
 import org.springframework.stereotype.Component;
 
-import com.esstudio.platform.esstudiocore.dto.CreateClientProfileDto;
-import com.esstudio.platform.esstudiocore.dto.UpdateUserDto;
+import com.esstudio.platform.esstudiocore.dto.ClientProfileDto;
 import com.esstudio.platform.esstudiocore.entities.ClientProfile;
 
 @Component
 public class ClientProfileMapper {
 
-    public ClientProfile toEntity(CreateClientProfileDto dto) {
+    // ClientProfile (entity) -> ClientProfileDto (client response)
+    public ClientProfileDto toDto(ClientProfile profile) {
 
-        if (dto == null) return null;
+        if (profile == null)
+            return null;
 
-        ClientProfile profile = new ClientProfile();
-
-        profile.setCompanyName(dto.getCompanyName());
-        profile.setTaxId(dto.getTaxId());
-        profile.setBillingAddress(dto.getBillingAddress());
-
-        return profile;
-    }
-
-
-    public CreateClientProfileDto toDto(ClientProfile profile) {
-
-        if (profile == null) return null;
-
-        CreateClientProfileDto dto = new CreateClientProfileDto();
+        ClientProfileDto dto = new ClientProfileDto();
 
         dto.setCompanyName(profile.getCompanyName());
         dto.setTaxId(profile.getTaxId());
@@ -36,12 +23,27 @@ public class ClientProfileMapper {
         return dto;
     }
 
+    // ClientProfileDto -> ClientProfile (entity) (for create/update)
+    public ClientProfile toEntity(
+            ClientProfileDto dto,
+            ClientProfile profile) {
 
-    public void updateEntity(ClientProfile profile, UpdateUserDto dto) {
-        if (profile == null) return;
+        if (dto == null)
+            return profile;
 
-        profile.setCompanyName(dto.getClientProfile().getCompanyName());
-        profile.setTaxId(dto.getClientProfile().getTaxId());
-        profile.setBillingAddress(dto.getClientProfile().getBillingAddress());
+        if (profile == null) {
+            profile = new ClientProfile();
+        }
+
+        if (dto.getCompanyName() != null)
+            profile.setCompanyName(dto.getCompanyName());
+
+        if (dto.getTaxId() != null)
+            profile.setTaxId(dto.getTaxId());
+
+        if (dto.getBillingAddress() != null)
+            profile.setBillingAddress(dto.getBillingAddress());
+
+        return profile;
     }
 }

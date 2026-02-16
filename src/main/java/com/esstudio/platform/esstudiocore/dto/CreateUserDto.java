@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.Set;
+
 public class CreateUserDto {
 
     @Email
@@ -29,8 +31,10 @@ public class CreateUserDto {
 
     private boolean isAdmin;
 
+    private Set<String> roles;
+
     // Optional Client profile information for users
-    private CreateClientProfileDto clientProfile;
+    private ClientProfileDto clientProfile;
 
     public String getEmail() {
         return email;
@@ -44,16 +48,16 @@ public class CreateUserDto {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public boolean isAdmin() {
         return isAdmin;
     }
 
     public void setAdmin(boolean isAdmin) {
         this.isAdmin = isAdmin;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getFirstName() {
@@ -79,12 +83,20 @@ public class CreateUserDto {
     public void setPhone(String phone) {
         this.phone = phone;
     }
+
+    public Set<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<String> roles) {
+        this.roles = roles;
+    }
     
-    public CreateClientProfileDto getClientProfile() {
+    public ClientProfileDto getClientProfile() {
         return clientProfile;
     }
 
-    public void setClientProfile(CreateClientProfileDto clientProfile) {
+    public void setClientProfile(ClientProfileDto clientProfile) {
         this.clientProfile = clientProfile;
     }
 }

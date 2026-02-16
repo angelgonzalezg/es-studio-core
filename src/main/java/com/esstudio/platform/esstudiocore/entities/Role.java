@@ -1,7 +1,7 @@
 package com.esstudio.platform.esstudiocore.entities;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -21,17 +21,17 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String name;
 
     // Bidirectional relationship with User, we ignore users in JSON to prevent infinite recursion.
     // Hibernate lazy loading can cause issues during JSON serialization, so we also ignore handler and hibernateLazyInitializer.
     @JsonIgnoreProperties({"roles", "handler", "hibernateLazyInitializer"})
     @ManyToMany(mappedBy = "roles")
-    private List<User> users;
+    private Set<User> users;
 
     public Role() {
-        this.users = new ArrayList<>();
+        this.users = new HashSet<>();
     }
 
     public Role(String name) {
@@ -54,11 +54,11 @@ public class Role {
         this.name = name;
     }
 
-    public List<User> getUsers() {
+    public Set<User> getUsers() {
         return users;
     }
 
-    public void setUsers(List<User> users) {
+    public void setUsers(Set<User> users) {
         this.users = users;
     }
 

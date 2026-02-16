@@ -1,7 +1,7 @@
 package com.esstudio.platform.esstudiocore.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class UserDto {
@@ -20,11 +20,9 @@ public class UserDto {
 
     private boolean enabled;
 
-    private List<String> roles;
+    private Set<String> roles;
 
     private LocalDateTime creationTime;
-
-    private ClientProfileDto clientProfile;
 
     public Long getId() {
         return id;
@@ -82,11 +80,11 @@ public class UserDto {
         this.enabled = enabled;
     }
 
-    public List<String> getRoles() {
+    public Set<String> getRoles() {
         return roles;
     }
 
-    public void setRoles(List<String> roles) {
+    public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
 
@@ -96,13 +94,5 @@ public class UserDto {
 
     public void setCreationTime(LocalDateTime creationTime) {
         this.creationTime = creationTime;
-    }
-
-    public ClientProfileDto getClientProfile() {
-        return clientProfile;
-    }
-
-    public void setClientProfile(ClientProfileDto clientProfile) {
-        this.clientProfile = clientProfile;
     }
 }

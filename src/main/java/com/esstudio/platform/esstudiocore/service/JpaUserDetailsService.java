@@ -20,12 +20,12 @@ import com.esstudio.platform.esstudiocore.repository.UserRepository;
 public class JpaUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private UserRepository repository;
+    private UserRepository userRepository;
 
     @Transactional(readOnly = true)
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Optional<User> userOptional = repository.findByEmail(email);
+        Optional<User> userOptional = userRepository.findUserByEmail(email);
 
         if(userOptional.isEmpty()) {
             throw new UsernameNotFoundException(String.format("Email %s does not exist in the system!", email));

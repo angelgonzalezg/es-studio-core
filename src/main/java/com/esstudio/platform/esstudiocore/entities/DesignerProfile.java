@@ -11,8 +11,8 @@ import jakarta.persistence.Table;
 
 
 @Entity
-@Table(name = "client_profiles")
-public class ClientProfile {
+@Table(name = "designer_profiles")
+public class DesignerProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,10 +25,9 @@ public class ClientProfile {
     )
     private User user;
 
-    private String companyName;
-    private String taxId;
-    private String billingAddress;
-
+    private String specialty;
+    private String bio;
+    private String portfolioUrl;
     public Long getId() {
         return id;
     }
@@ -45,28 +44,27 @@ public class ClientProfile {
         this.user = user;
     }
 
-    public String getCompanyName() {
-        return companyName;
+    public String getSpecialty() {
+        return specialty;
     }
 
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
+    public void setSpecialty(String specialty) {
+        this.specialty = specialty;
     }
 
-    public String getTaxId() {
-        return taxId;
+    public String getBio() {
+        return bio;
     }
 
-    public void setTaxId(String taxId) {
-        this.taxId = taxId;
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
-    public String getBillingAddress() {
-        return billingAddress;
+    public String getPortfolioUrl() {
+        return portfolioUrl;
     }
 
-    public void setBillingAddress(String billingAddress) {
-        this.billingAddress = billingAddress;
-    }
-    
+    public void setPortfolioUrl(String portfolioUrl) {
+        this.portfolioUrl = portfolioUrl;
+    }   
 }

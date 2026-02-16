@@ -1,8 +1,8 @@
 package com.esstudio.platform.esstudiocore.entities;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -69,12 +69,15 @@ public class User {
             @UniqueConstraint(columnNames = {"user_id", "role_id"})
         }
     )
-    private List<Role> roles;
+    private Set<Role> roles;
 
     // Bidirectional relationship with client profiles
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = true)
     private ClientProfile clientProfile;
 
+    // Bidirectional relationship with designer profiles
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = true)
+    private DesignerProfile designerProfile;
 
     @PrePersist
     public void prePersist() {
@@ -90,7 +93,7 @@ public class User {
     }
 
     public User() {
-        roles = new ArrayList<>();
+        roles = new HashSet<>();
     }
 
     public Long getId() {
@@ -117,11 +120,11 @@ public class User {
         this.email = email;
     }
 
-    public List<Role> getRoles() {
+    public Set<Role> getRoles() {
         return roles;
     }
 
-    public void setRoles(List<Role> roles) {
+    public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
 
@@ -226,5 +229,13 @@ public class User {
 
     public void setClientProfile(ClientProfile clientProfile) {
         this.clientProfile = clientProfile;
+    }
+
+    public DesignerProfile getDesignerProfile() {
+        return designerProfile;
+    }
+
+    public void setDesignerProfile(DesignerProfile designerProfile) {
+        this.designerProfile = designerProfile;
     }
 }

@@ -3,9 +3,7 @@ package com.esstudio.platform.esstudiocore.dto;
 public class ClientProfileDto {
 
     private String companyName;
-    
     private String taxId;
-
     private String billingAddress;
 
     public String getCompanyName() {

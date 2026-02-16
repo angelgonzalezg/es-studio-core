@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.esstudio.platform.esstudiocore.dto.CreateUserDto;
 import com.esstudio.platform.esstudiocore.dto.UpdateUserDto;
+import com.esstudio.platform.esstudiocore.dto.UserDetailsDto;
 import com.esstudio.platform.esstudiocore.dto.UserDto;
 
 public interface UserService {
@@ -15,7 +16,9 @@ public interface UserService {
 
     UserDto createUser(CreateUserDto dto);
 
-    UserDto updateUserProfile(Long id, UpdateUserDto dto);
+    UserDetailsDto updateUser(Long id, UpdateUserDto dto);
+
+    UserDetailsDto getUserDetails(Long id);
 
     boolean existsByEmail(String email);
 

@@ -53,9 +53,6 @@ public class SpringSecurityConfig {
         return http.authorizeHttpRequests(
             (authorize) -> authorize
             .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
-            .requestMatchers(HttpMethod.POST, "/users/register").hasAnyRole("ADMIN", "DESIGNER")
-            .requestMatchers(HttpMethod.GET, "/users").hasAnyRole("ADMIN", "DESIGNER")
-            // .requestMatchers(HttpMethod.GET, "/users", "/users/{id}").hasAnyRole("ADMIN", "DESIGNER")
             .anyRequest().authenticated())
             .addFilter(jwtValidationFilter(authenticationManager()))
             .csrf(config -> config.disable())
