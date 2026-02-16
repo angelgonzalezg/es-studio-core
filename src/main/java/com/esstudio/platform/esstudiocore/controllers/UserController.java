@@ -19,12 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.esstudio.platform.esstudiocore.dto.CreateUserDto;
+import com.esstudio.platform.esstudiocore.dto.UpdateRoleDto;
 import com.esstudio.platform.esstudiocore.dto.UpdateUserDto;
 import com.esstudio.platform.esstudiocore.dto.UserDetailsDto;
 import com.esstudio.platform.esstudiocore.dto.UserDto;
 import com.esstudio.platform.esstudiocore.service.UserService;
-
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 // @CrossOrigin(origins = {"http://localhost:3000"}) // Allow requests from the frontend application
 // @CrossOrigin(originPatterns = {"http://localhost:3000", "http://localhost:5173"}) // Allow requests from frontend applications running on localhost:3000 and localhost:5173
@@ -39,22 +40,20 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('DESIGNER')")
     @GetMapping
-    public List<UserDto> list() {
+    public List<UserDto> getUsers() {
         return service.getUsers();
     }
     
     @PreAuthorize("hasRole('ADMIN') or hasRole('DESIGNER')")
     @GetMapping("/{id}")
     public ResponseEntity<UserDetailsDto> getUserById(@PathVariable("id") Long id) {
-
         UserDetailsDto user = service.getUserDetails(id);
-
         return ResponseEntity.ok(user);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
-    public ResponseEntity<?> create(@Valid @RequestBody CreateUserDto user, BindingResult result) {
+    public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserDto user, BindingResult result) {
         if (result.hasFieldErrors()) {
             return validate(result);
         }
@@ -62,13 +61,18 @@ public class UserController {
     }
 
     @PutMapping("/{id}/me")
-    public void update(@PathVariable("id") long id, @RequestBody UpdateUserDto user) {
+    public void updateUser(@PathVariable("id") long id, @RequestBody UpdateUserDto user) {
         service.updateUser(id, user);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/role")
+    public void updateRole(@PathVariable("id") long id, @RequestBody @NotNull UpdateRoleDto dto) {
+        service.promoteUser(id, dto.getRole());
     }
 
     private ResponseEntity<?> validate(BindingResult result) {
         Map<String, String> errors = new HashMap<>();
-
         result.getFieldErrors().forEach(err -> {
             errors.put(err.getField(), "The " + err.getField() + " " + err.getDefaultMessage());
         });

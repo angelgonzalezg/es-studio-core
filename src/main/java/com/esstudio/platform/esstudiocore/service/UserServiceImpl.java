@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +42,6 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
-
 
     // Get all Users
     @Override
@@ -108,30 +110,62 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // boolean isAdmin = auth.getAuthorities()
+        //         .stream()
+        //         .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
         userMapper.updateEntity(user, dto);
 
-        // Update roles if provided
-        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
-            for (String roleName : dto.getRoles()) {
-                RoleType roleType = RoleType.valueOf(roleName);
-                roleService.assignRoletoUser(user, roleType);
-            }
-        }
+        // // Update roles if provided
+        // if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
+        //     if (!isAdmin) {
+        //         throw new RuntimeException("Only admins can update roles!");
+        //     }
+        //     for (String roleName : dto.getRoles()) {
+        //         RoleType roleType = RoleType.valueOf(roleName);
+        //         roleService.assignRoletoUser(user, roleType);
+        //     }
+        // }
 
         // Client profile update
-        if (roleService.hasRole(user, RoleType.ROLE_USER) && dto.getClientProfile() != null) {
+        if (roleService.hasRole(user, RoleType.ROLE_USER) || roleService.hasRole(user, RoleType.ROLE_ADMIN) && dto.getClientProfile() != null) {
             clientProfileService.updateProfile(user, dto.getClientProfile());
         }
 
         // Designer profile update
-        if (roleService.hasRole(user, RoleType.ROLE_DESIGNER) && dto.getDesignerProfile() != null) {
+        if (roleService.hasRole(user, RoleType.ROLE_DESIGNER) || roleService.hasRole(user, RoleType.ROLE_ADMIN) && dto.getDesignerProfile() != null) {
             designerProfileService.updateProfile(user, dto.getDesignerProfile());
         }
 
         user.setUpdateTime(LocalDateTime.now());
         User savedUser = userRepository.save(user);
-        
+
         return userMapper.toDetails(savedUser);
+    }
+
+    public void promoteUser(Long id, RoleType newRole) {  
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            throw new RuntimeException("Only admins can promote users!");
+        }
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        
+        user.getRoles().clear(); // Clear existing roles
+
+
+        roleService.assignRoletoUser(user, RoleType.ROLE_USER); // Assign default role
+        roleService.assignRoletoUser(user, newRole); // Assign new role
+
+        user.setUpdateTime(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     // Validate if email exists in db
