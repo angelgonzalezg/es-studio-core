@@ -72,7 +72,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         Collection<String> roles = authResult.getAuthorities()
                 .stream()
                 .map(authority -> authority.getAuthority())
-                // .filter(role -> role.startsWith("ROLE_"))
+                .filter(role -> role.startsWith("ROLE_"))
                 .toList();
 
         Claims claims = Jwts.claims()

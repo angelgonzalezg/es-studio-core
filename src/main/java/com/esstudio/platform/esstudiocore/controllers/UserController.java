@@ -11,12 +11,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.esstudio.platform.esstudiocore.dto.CreateUserDto;
@@ -53,7 +55,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/register")
+    @PostMapping("/create")
     public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserDto user, BindingResult result) {
         if (result.hasFieldErrors()) {
             return validate(result);
@@ -61,9 +63,17 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createUser(user));
     }
 
-    @PutMapping("/{id}/me")
-    public void updateUser(@PathVariable("id") long id, @RequestBody UpdateUserDto user) {
-        service.updateUser(id, user);
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable("id") long id, @RequestBody UpdateUserDto user) {
+        UserDetailsDto updatedUser = service.updateUser(id, user);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable("id") long id) {
+        service.deleteUser(id);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

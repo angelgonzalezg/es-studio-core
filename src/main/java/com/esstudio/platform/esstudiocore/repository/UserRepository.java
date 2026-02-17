@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.esstudio.platform.esstudiocore.entities.User;
-import com.esstudio.platform.esstudiocore.security.enums.RoleType;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 

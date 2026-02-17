@@ -16,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,7 +26,7 @@ import com.esstudio.platform.esstudiocore.security.filter.JwtValidationFilter;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true) // Enable method-level security with @PreAuthorize and @PostAuthorize
-public class SpringSecurityConfig {
+public class SecurityConfig {
 
     @Autowired
     private AuthenticationConfiguration authenticationConfiguration;
@@ -37,7 +38,7 @@ public class SpringSecurityConfig {
     AuthenticationManager authenticationManager() throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-    
+
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -50,15 +51,17 @@ public class SpringSecurityConfig {
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.authorizeHttpRequests(
-            (authorize) -> authorize
-            .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
-            .anyRequest().authenticated())
-            .addFilter(jwtValidationFilter(authenticationManager()))
-            .csrf(config -> config.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .build();
+        return http
+                .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtValidationFilter(authenticationManager()),
+                        UsernamePasswordAuthenticationFilter.class)
+                .csrf(config -> config.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .build();
     }
 
     // CORS configuration to allow requests from the frontend application
@@ -75,11 +78,12 @@ public class SpringSecurityConfig {
         return source;
     }
 
-    // Register the CORS filter with the highest precedence to ensure it is applied before other filters
+    // Register the CORS filter with the highest precedence to ensure it is applied
+    // before other filters
     @Bean
     FilterRegistrationBean<CorsFilter> corsFilterRegistrationBean() {
         FilterRegistrationBean<CorsFilter> corsBean = new FilterRegistrationBean<>(
-            new CorsFilter(corsConfigurationSource()) // Use the same CORS configuration source for the filter
+                new CorsFilter(corsConfigurationSource()) // Use the same CORS configuration source for the filter
         );
         corsBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
         return corsBean;

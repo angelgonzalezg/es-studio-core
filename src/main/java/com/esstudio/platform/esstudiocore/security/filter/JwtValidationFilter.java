@@ -7,7 +7,6 @@ import static com.esstudio.platform.esstudiocore.security.TokenJwtConfig.SECRET_
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -53,33 +53,46 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
         // Extract Jwt token from header
         String token = header.replace(PREFIX_TOKEN, "");
 
-        if (this.tokenBlacklist.isBlacklisted(token)) {
-            Map<String, String> body = new HashMap<>();
-            body.put("error", "Token has been blacklisted");
-            body.put("message", "Please login again");
-            response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+        if (tokenBlacklist.isBlacklisted(token)) {
+
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(CONTENT_TYPE);
+
+            Map<String, String> body = Map.of(
+                    "error", "Token has been blacklisted",
+                    "message", "Please login again");
+
+            response.getWriter()
+                    .write(new ObjectMapper().writeValueAsString(body));
+
             return;
         }
 
         try {
             Claims claims = Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token).getPayload();
 
-            String uuid = claims.getSubject();
-            List<?> rolesClaims = claims.get("authorities", List.class);
+            String username = claims.getSubject();
+            List<?> roles = claims.get("authorities", List.class);
 
+            if (roles == null) {
+                roles = List.of();
+            }
 
-            
             // Convert the roles from the claims to a list of GrantedAuthority objects
-            Collection<? extends GrantedAuthority> authorities = rolesClaims.stream()
+            Collection<? extends GrantedAuthority> authorities = roles.stream()
                     .map(Object::toString)
+                    .filter(role -> role.startsWith("ROLE_"))
                     .map(SimpleGrantedAuthority::new)
                     .toList();
 
+            // Clear any existing authentication
+            SecurityContextHolder.clearContext();
+
             // Create an Authentication object with the user UUID and authorities
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(uuid,
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username,
                     null, authorities);
+
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             // Set the authentication in the SecurityContext
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
@@ -88,13 +101,17 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
             chain.doFilter(request, response);
 
         } catch (JwtException e) {
-            Map<String, String> body = new HashMap<>();
-            body.put("error", "Invalid or expired token");
-            body.put("message", e.getMessage());
 
-            response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+            SecurityContextHolder.clearContext();
+
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(CONTENT_TYPE);
+
+            Map<String, String> body = Map.of(
+                    "error", "Invalid or expired token",
+                    "message", e.getMessage());
+
+            response.getWriter().write(new ObjectMapper().writeValueAsString(body));
         }
 
     }

@@ -50,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
         Collection<String> roles = authentication.getAuthorities()
             .stream()
             .map(a -> a.getAuthority())
+            .filter(r -> r.startsWith("ROLE_"))
             .collect(Collectors.toList());
 
         Claims claims = Jwts.claims()

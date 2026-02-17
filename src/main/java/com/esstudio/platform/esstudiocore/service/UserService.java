@@ -21,6 +21,8 @@ public interface UserService {
 
     UserDetailsDto updateUser(Long id, UpdateUserDto dto);
 
+    void deleteUser(Long id);
+
     UserDetailsDto getUserDetails(Long id);
 
     void changeRole(Long id, RoleType newRole, Long currentAdminId);

@@ -6,9 +6,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.esstudio.platform.esstudiocore.dto.CreateUserDto;
 import com.esstudio.platform.esstudiocore.dto.UpdateUserDto;
@@ -97,7 +99,7 @@ public class UserServiceImpl implements UserService {
     public UserDetailsDto getUserDetails(Long id) {
 
         User user = userRepository.findUserWithProfilesById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
 
         return userMapper.toDetailsDto(user);
     }
@@ -106,7 +108,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDetailsDto updateUser(Long id, UpdateUserDto dto) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found!"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
 
         userMapper.updateEntity(user, dto);
 
@@ -129,12 +131,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
+        userRepository.delete(user);
+    }
+
+    @Override
     @Transactional
     public void changeRole(Long id, RoleType newRole, Long currentAdminId) {
 
         User targetUser = userRepository.findById(id)
-                .orElseThrow();
-
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
         if (currentAdminId.equals(targetUser.getId()) && newRole != RoleType.ROLE_ADMIN) {
             throw new IllegalStateException("Admins cannot demote themselves!");
         }
