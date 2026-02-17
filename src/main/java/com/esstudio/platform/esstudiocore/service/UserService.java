@@ -11,9 +11,11 @@ import com.esstudio.platform.esstudiocore.security.enums.RoleType;
 
 public interface UserService {
 
-    List<UserDto> getUsers();
-
     Optional<UserDto> getUserById(long id);
+
+    Optional<UserDto> getUserByUuid(String uuid);
+
+    List<UserDto> getUsers();
 
     UserDto createUser(CreateUserDto dto);
 
@@ -21,7 +23,7 @@ public interface UserService {
 
     UserDetailsDto getUserDetails(Long id);
 
-    void promoteUser(Long id, RoleType newRole);
+    void changeRole(Long id, RoleType newRole, Long currentAdminId);
 
     boolean existsByEmail(String email);
 

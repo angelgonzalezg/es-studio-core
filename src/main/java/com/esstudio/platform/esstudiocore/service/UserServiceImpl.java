@@ -3,11 +3,9 @@ package com.esstudio.platform.esstudiocore.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,7 +99,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findUserWithProfilesById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return userMapper.toDetails(user);
+        return userMapper.toDetailsDto(user);
     }
 
     @Override
@@ -110,62 +108,56 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // boolean isAdmin = auth.getAuthorities()
-        //         .stream()
-        //         .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
         userMapper.updateEntity(user, dto);
 
-        // // Update roles if provided
-        // if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
-        //     if (!isAdmin) {
-        //         throw new RuntimeException("Only admins can update roles!");
-        //     }
-        //     for (String roleName : dto.getRoles()) {
-        //         RoleType roleType = RoleType.valueOf(roleName);
-        //         roleService.assignRoletoUser(user, roleType);
-        //     }
-        // }
-
         // Client profile update
-        if (roleService.hasRole(user, RoleType.ROLE_USER) || roleService.hasRole(user, RoleType.ROLE_ADMIN) && dto.getClientProfile() != null) {
+        if (roleService.hasRole(user, RoleType.ROLE_USER)
+                || roleService.hasRole(user, RoleType.ROLE_ADMIN) && dto.getClientProfile() != null) {
             clientProfileService.updateProfile(user, dto.getClientProfile());
         }
 
         // Designer profile update
-        if (roleService.hasRole(user, RoleType.ROLE_DESIGNER) || roleService.hasRole(user, RoleType.ROLE_ADMIN) && dto.getDesignerProfile() != null) {
+        if (roleService.hasRole(user, RoleType.ROLE_DESIGNER)
+                || roleService.hasRole(user, RoleType.ROLE_ADMIN) && dto.getDesignerProfile() != null) {
             designerProfileService.updateProfile(user, dto.getDesignerProfile());
         }
 
         user.setUpdateTime(LocalDateTime.now());
         User savedUser = userRepository.save(user);
 
-        return userMapper.toDetails(savedUser);
+        return userMapper.toDetailsDto(savedUser);
     }
 
-    public void promoteUser(Long id, RoleType newRole) {  
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth.getAuthorities()
-                .stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    @Override
+    @Transactional
+    public void changeRole(Long id, RoleType newRole, Long currentAdminId) {
 
-        if (!isAdmin) {
-            throw new RuntimeException("Only admins can promote users!");
+        User targetUser = userRepository.findById(id)
+                .orElseThrow();
+
+        if (currentAdminId.equals(targetUser.getId()) && newRole != RoleType.ROLE_ADMIN) {
+            throw new IllegalStateException("Admins cannot demote themselves!");
         }
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found!"));
+        if (roleService.hasRole(targetUser, RoleType.ROLE_ADMIN) && newRole != RoleType.ROLE_ADMIN) {
+            long adminCount = userRepository.countUsersWithRole(RoleType.ROLE_ADMIN.name());
+            if (adminCount <= 1) {
+                throw new IllegalStateException("Cannot demote the last admin user!");
+            }
+        }
 
-        
-        user.getRoles().clear(); // Clear existing roles
+        targetUser.getRoles().clear(); // Clear existing roles
 
+        roleService.assignRoletoUser(targetUser, newRole); // Assign new role
 
-        roleService.assignRoletoUser(user, RoleType.ROLE_USER); // Assign default role
-        roleService.assignRoletoUser(user, newRole); // Assign new role
+        targetUser.setUpdateTime(LocalDateTime.now());
+        userRepository.save(targetUser);
+    }
 
-        user.setUpdateTime(LocalDateTime.now());
-        userRepository.save(user);
+    @Override
+    public Optional<UserDto> getUserByUuid(String uuid) {
+        return userRepository.findUserByUuid(UUID.fromString(uuid))
+                .map(userMapper::toDto);
     }
 
     // Validate if email exists in db

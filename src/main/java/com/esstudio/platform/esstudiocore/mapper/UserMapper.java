@@ -35,6 +35,28 @@ public class UserMapper {
         return user;
     }
 
+    // UpdateUserDto -> User (entity)
+    public void updateEntity(
+            User user,
+            UpdateUserDto dto) {
+
+        if (dto == null || user == null)
+            return;
+
+        // User fields
+        if (dto.getFirstName() != null) {
+            user.setFirstName(dto.getFirstName());
+        }
+
+        if (dto.getLastName() != null) {
+            user.setLastName(dto.getLastName());
+        }
+
+        if (dto.getPhone() != null) {
+            user.setPhone(dto.getPhone());
+        }
+    }
+
     // User (entity) -> UserDto (client response)
     public UserDto toDto(User user) {
         if (user == null)
@@ -62,52 +84,6 @@ public class UserMapper {
     // User (entity) -> UserDetailsDto (client response)
     public UserDetailsDto toDetailsDto(User user) {
 
-        UserDetailsDto dto = new UserDetailsDto();
-
-        dto.setId(user.getId());
-        dto.setEmail(user.getEmail());
-        dto.setFirstName(user.getFirstName());
-        dto.setLastName(user.getLastName());
-
-        dto.setRoles(
-                user.getRoles()
-                        .stream()
-                        .map(role -> role.getName())
-                        .collect(Collectors.toSet()));
-
-        if (user.getClientProfile() != null) {
-            dto.setClientProfile(
-                    clientMapper.toDto(
-                            user.getClientProfile()));
-        }
-
-        return dto;
-    }
-
-    // UpdateUserDto -> User
-    public void updateEntity(
-            User user,
-            UpdateUserDto dto) {
-
-        if (dto == null || user == null)
-            return;
-
-        // User fields
-        if (dto.getFirstName() != null) {
-            user.setFirstName(dto.getFirstName());
-        }
-
-        if (dto.getLastName() != null) {
-            user.setLastName(dto.getLastName());
-        }
-
-        if (dto.getPhone() != null) {
-            user.setPhone(dto.getPhone());
-        }
-    }
-
-    public UserDetailsDto toDetails(User user) {
-
         if (user == null)
             return null;
 
@@ -115,6 +91,8 @@ public class UserMapper {
 
         dto.setId(user.getId());
         dto.setEmail(user.getEmail());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
 
         dto.setRoles(
                 user.getRoles()

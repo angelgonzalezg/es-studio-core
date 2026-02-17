@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,8 +68,12 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/role")
-    public void updateRole(@PathVariable("id") long id, @RequestBody @NotNull UpdateRoleDto dto) {
-        service.promoteUser(id, dto.getRole());
+    public void updateRole(@PathVariable("id") long id, @RequestBody @NotNull UpdateRoleDto dto, Authentication auth) {
+        String currentAdminUuid = auth.getName();
+        Long currentAdminId = service.getUserByUuid(currentAdminUuid)
+                .orElseThrow(() -> new RuntimeException("Current admin user not found"))
+                .getId();
+        service.changeRole(id, dto.getRole(), currentAdminId);
     }
 
     private ResponseEntity<?> validate(BindingResult result) {

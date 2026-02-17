@@ -2,12 +2,15 @@ package com.esstudio.platform.esstudiocore.dto;
 
 import java.util.Set;
 
+import org.springframework.cglib.core.Local;
+
 public class UserDetailsDto {
     private Long id;
     private String email;
     private String firstName;
     private String lastName;
     private Set<String> roles;
+    private Local updateTime;
 
     private ClientProfileDto clientProfile;
     private DesignerProfileDto designerProfile;
@@ -50,6 +53,14 @@ public class UserDetailsDto {
 
     public void setRoles(Set<String> roles) {
         this.roles = roles;
+    }
+
+    public Local getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Local updateTime) {
+        this.updateTime = updateTime;
     }
 
     public ClientProfileDto getClientProfile() {
