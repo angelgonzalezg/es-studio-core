@@ -29,7 +29,7 @@ import jakarta.persistence.UniqueConstraint;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique=true, nullable = false, updatable = false, length = 36)
@@ -59,7 +59,7 @@ public class User {
 
     // Bidirectional relationship with Role, we ignore roles in JSON to prevent infinite recursion.
     // Hibernate lazy loading can cause issues during JSON serialization, so we also ignore handler and hibernateLazyInitializer.
-    @JsonIgnoreProperties({"users", "handler", "hibernateLazyInitializer"})
+    @JsonIgnoreProperties({"users"})
     @ManyToMany
     @JoinTable(
         name = "user_roles",
@@ -69,14 +69,14 @@ public class User {
             @UniqueConstraint(columnNames = {"user_id", "role_id"})
         }
     )
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
     // Bidirectional relationship with client profiles
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private ClientProfile clientProfile;
 
     // Bidirectional relationship with designer profiles
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private DesignerProfile designerProfile;
 
     @PrePersist

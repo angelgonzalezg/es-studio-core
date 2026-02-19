@@ -39,7 +39,7 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody CreateUserDto dto, BindingResult result) {
+    public ResponseEntity<?> register(@RequestBody @Valid CreateUserDto dto, BindingResult result) {
         if (result.hasFieldErrors()) {
             return validate(result);
         }

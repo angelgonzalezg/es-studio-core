@@ -1,11 +1,15 @@
 package com.esstudio.platform.esstudiocore.entities;
 
+import java.util.Set;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
@@ -15,7 +19,7 @@ import jakarta.persistence.Table;
 public class DesignerProfile {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -24,6 +28,14 @@ public class DesignerProfile {
         unique = true
     )
     private User user;
+
+    @ManyToMany
+    @JoinTable(
+        name = "designer_projects",
+        joinColumns = @JoinColumn(name = "designer_id"),
+        inverseJoinColumns = @JoinColumn(name = "project_id")
+    )
+    private Set<Project> projects;
 
     private String specialty;
     private String bio;
@@ -66,5 +78,13 @@ public class DesignerProfile {
 
     public void setPortfolioUrl(String portfolioUrl) {
         this.portfolioUrl = portfolioUrl;
+    }
+
+    public Set<Project> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(Set<Project> projects) {
+        this.projects = projects;
     }   
 }

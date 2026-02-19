@@ -56,7 +56,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
-    public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserDto user, BindingResult result) {
+    public ResponseEntity<?> createUser(@RequestBody @Valid CreateUserDto user, BindingResult result) {
         if (result.hasFieldErrors()) {
             return validate(result);
         }

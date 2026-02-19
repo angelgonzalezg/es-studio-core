@@ -18,7 +18,7 @@ import jakarta.persistence.Table;
 public class Role {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -26,9 +26,9 @@ public class Role {
 
     // Bidirectional relationship with User, we ignore users in JSON to prevent infinite recursion.
     // Hibernate lazy loading can cause issues during JSON serialization, so we also ignore handler and hibernateLazyInitializer.
-    @JsonIgnoreProperties({"roles", "handler", "hibernateLazyInitializer"})
+    @JsonIgnoreProperties({"roles"})
     @ManyToMany(mappedBy = "roles")
-    private Set<User> users;
+    private Set<User> users = new HashSet<>();
 
     public Role() {
         this.users = new HashSet<>();
