@@ -9,6 +9,8 @@ public class UserDetailsDto {
     private String email;
     private String firstName;
     private String lastName;
+    private String phone;
+
     private Set<String> roles;
     private Local updateTime;
 
@@ -45,6 +47,14 @@ public class UserDetailsDto {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public Set<String> getRoles() {

@@ -113,14 +113,12 @@ public class UserServiceImpl implements UserService {
         userMapper.updateEntity(user, dto);
 
         // Client profile update
-        if (roleService.hasRole(user, RoleType.ROLE_USER)
-                || roleService.hasRole(user, RoleType.ROLE_ADMIN) && dto.getClientProfile() != null) {
+        if ((roleService.hasRole(user, RoleType.ROLE_USER) || roleService.hasRole(user, RoleType.ROLE_ADMIN)) && dto.getClientProfile() != null) {
             clientProfileService.updateProfile(user, dto.getClientProfile());
         }
 
         // Designer profile update
-        if (roleService.hasRole(user, RoleType.ROLE_DESIGNER)
-                || roleService.hasRole(user, RoleType.ROLE_ADMIN) && dto.getDesignerProfile() != null) {
+        if ((roleService.hasRole(user, RoleType.ROLE_DESIGNER) || roleService.hasRole(user, RoleType.ROLE_ADMIN)) && dto.getDesignerProfile() != null) {
             designerProfileService.updateProfile(user, dto.getDesignerProfile());
         }
 

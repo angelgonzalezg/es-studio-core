@@ -93,6 +93,7 @@ public class UserMapper {
         dto.setEmail(user.getEmail());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
+        dto.setPhone(user.getPhone());
 
         dto.setRoles(
                 user.getRoles()
